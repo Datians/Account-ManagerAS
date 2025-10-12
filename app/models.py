@@ -25,29 +25,34 @@ class User(db.Model, UserMixin):
 # -----------------------
 # Proveedor / Cliente
 # -----------------------
+# app/models.py (fragmento)
+
 class Provider(db.Model):
+    __tablename__ = "provider"
     id   = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
 
-    # Relación inversa explícita (evita colisiones de backref)
-    accounts = db.relationship(
-        "Account",
-        back_populates="provider",
-        cascade="all, delete-orphan"
-    )
+    # NUEVO/RESTABLECIDO
+    contact = db.Column(db.String(255))  # opcional
+    notes   = db.Column(db.Text)         # opcional
+
+    clients  = db.relationship("Client", back_populates="provider")
+    accounts = db.relationship("Account", back_populates="provider")
 
 
 class Client(db.Model):
+    __tablename__ = "client"
     id          = db.Column(db.Integer, primary_key=True)
     name        = db.Column(db.String(255), unique=True, nullable=False)
     provider_id = db.Column(db.Integer, db.ForeignKey("provider.id"))
-    provider    = db.relationship("Provider")
 
-    accounts = db.relationship(
-        "Account",
-        back_populates="client",
-        cascade="all, delete-orphan"
-    )
+    # NUEVO/RESTABLECIDO
+    contact = db.Column(db.String(255))  # opcional
+    notes   = db.Column(db.Text)         # opcional
+
+    provider = db.relationship("Provider", back_populates="clients")
+    accounts = db.relationship("Account", back_populates="client")
+
 
 
 # -----------------------
