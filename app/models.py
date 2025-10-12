@@ -1,4 +1,3 @@
-# app/models.py
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,34 +24,42 @@ class User(db.Model, UserMixin):
 # -----------------------
 # Proveedor / Cliente
 # -----------------------
-# app/models.py (fragmento)
-
 class Provider(db.Model):
-    __tablename__ = "provider"
-    id   = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True, nullable=False)
+    contact = db.Column(db.String(255))          # mantener
+    notes   = db.Column(db.Text)                 # mantener
 
-    # NUEVO/RESTABLECIDO
-    contact = db.Column(db.String(255))  # opcional
-    notes   = db.Column(db.Text)         # opcional
+    # relación con clientes
+    clients = db.relationship(
+        "Client",
+        back_populates="provider",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
-    clients  = db.relationship("Client", back_populates="provider")
+    # relación con cuentas (como ya lo tenías)
     accounts = db.relationship("Account", back_populates="provider")
 
 
 class Client(db.Model):
-    __tablename__ = "client"
-    id          = db.Column(db.Integer, primary_key=True)
-    name        = db.Column(db.String(255), unique=True, nullable=False)
-    provider_id = db.Column(db.Integer, db.ForeignKey("provider.id"))
+    id   = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=True, nullable=False)
 
-    # NUEVO/RESTABLECIDO
-    contact = db.Column(db.String(255))  # opcional
-    notes   = db.Column(db.Text)         # opcional
+    # ***** ESTA COLUMNA ES CLAVE *****
+    provider_id = db.Column(
+        db.Integer,
+        db.ForeignKey("provider.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    contact = db.Column(db.String(255))          # mantener
+    notes   = db.Column(db.Text)                 # mantener
 
     provider = db.relationship("Provider", back_populates="clients")
-    accounts = db.relationship("Account", back_populates="client")
 
+    # relación con cuentas (como ya lo tenías)
+    accounts = db.relationship("Account", back_populates="client")
 
 
 # -----------------------
@@ -74,13 +81,10 @@ class Account(db.Model):
     provider_id = db.Column(db.Integer, db.ForeignKey("provider.id"))
     client_id   = db.Column(db.Integer, db.ForeignKey("client.id"))
 
-    # Relaciones sin backref; usan back_populates para evitar conflicto
     provider = db.relationship("Provider", back_populates="accounts")
     client   = db.relationship("Client",   back_populates="accounts")
 
-    # Estado manual opcional: None | 'CAIDA'
     status_manual = db.Column(db.String(20), nullable=True)
 
 
-# Export explícito (opcional, pero ayuda a evitar confusiones)
 __all__ = ["User", "Provider", "Client", "Account"]
