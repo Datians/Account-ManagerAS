@@ -1,0 +1,57 @@
+# fly.toml app configuration file generated for accounts-manager-ansgt on 2025-10-12T03:24:36-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'accounts-manager-ansgt'
+primary_region = "iad"
+
+[build]
+  dockerfile = 'Dockerfile'
+
+
+[env]
+  DATA_DIR = '/data'
+  ENABLE_SCHEDULER = '1'
+  NOTIFY_RUN_HOUR = '9'
+  NOTIFY_WINDOW_DAYS = '7'
+  FLASK_APP = "app:create_app"
+  UPLOAD_FOLDER = "/data/uploads"
+  RUN_SCHEDULER = "1"
+
+[[mounts]]
+  source = 'data'
+  destination = '/data'
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[services]]
+  protocol = ''
+  internal_port = 8000
+  processes = ['app']
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
+
+  [[services.tcp_checks]]
+    interval = '15s'
+    timeout = '2s'
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  
+[deploy]
+  release_command = "flask db upgrade -d migrations"
