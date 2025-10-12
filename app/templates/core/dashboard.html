@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="section-title"><span class="dot"></span><h3 class="m-0">Resumen general</h3></div>
+
+<div class="mb-3 d-flex gap-2">
+  <a class="btn btn-primary" href="{{ url_for('core.run_pushover') }}">Enviar notificación ahora</a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Cuentas totales</div>
+      <div class="value">{{ total_accounts }}</div>
+      <div class="badge-soft mt-2">Registradas</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Activas</div>
+      <div class="value">{{ active }}</div>
+      <div class="badge-soft mt-2">Más de {{ window_days }} días</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Por vencer</div>
+      <div class="value">{{ expiring }}</div>
+      <div class="badge-soft mt-2">≤ {{ window_days }} días</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Vencidas</div>
+      <div class="value">{{ expired }}</div>
+      <div class="badge-soft mt-2">Fecha pasada</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Sin fecha</div>
+      <div class="value">{{ no_date }}</div>
+      <div class="badge-soft mt-2">end_date vacío</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Proveedores</div>
+      <div class="value">{{ total_providers }}</div>
+      <div class="badge-soft mt-2">Integrados</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi">
+      <div class="label">Clientes</div>
+      <div class="value">{{ total_clients }}</div>
+      <div class="badge-soft mt-2">Con servicio</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

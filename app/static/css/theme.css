@@ -1,0 +1,57 @@
+:root{
+  --bg:#0D0F14;
+  --surface:#12151C;
+  --border:#1E2230;
+  --text:#E6E8EE;
+  --muted:#A7AEC2;
+  --brand:#5B8CFF;
+  --shadow:0 10px 24px rgba(0,0,0,.35);
+}
+body{background:var(--bg); color:var(--text); font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+.bg-dark-gradient{background:linear-gradient(180deg, #0E1218 0%, #0B0E13 100%)!important; border-bottom:1px solid var(--border);}
+.card,.modal-content,.table,.form-control,.form-select,.dropdown-menu{
+  background-color:var(--surface)!important; color:var(--text)!important; border:1px solid var(--border)!important; box-shadow:var(--shadow);
+}
+.table thead th{color:var(--muted); border-bottom:1px solid var(--border)!important;}
+.table tbody tr:hover{background:#151924!important;}
+.form-control::placeholder{color:#73809C;}
+.btn-primary{background:linear-gradient(135deg, var(--brand) 0%, #8AAEFF 100%)!important; border-color:var(--brand)!important; color:#0B0F1A!important; font-weight:600;}
+.btn-outline-secondary{border-color:#2A3245!important; color:var(--muted)!important;}
+.alert{background:#111522; border-color:#1E2535; color:var(--text);}
+.section-title{display:flex; align-items:center; gap:.6rem; margin:8px 0 14px;}
+.section-title .dot{width:10px; height:10px; border-radius:50%; background:var(--brand); box-shadow:0 0 18px rgba(91,140,255,.6);}
+.kpi{background: radial-gradient(900px 400px at -10% -30%, rgba(91,140,255,.12), transparent), linear-gradient(180deg, #12151C 0%, #0F1218 100%);
+     border:1px solid var(--border); border-radius:16px; padding:16px 18px;}
+.kpi .label{color:var(--muted); font-size:.9rem;}
+.kpi .value{font-size:1.6rem; font-weight:700;}
+.badge-soft{background:#12182A; color:var(--muted); border:1px solid #1E2740; padding:.35rem .55rem; border-radius:10px;}
+
+/* ===== Urgencia por estado (NUEVO) ===== */
+.badge-active   { border-color:#1e2740; }
+.badge-expiring { border-color:#2b3b1e; color:#c5f1a1; background:#182312; }
+.badge-expired  { border-color:#3b1e2a; color:#ff9aa2; background:#25131c; }
+
+/* Resaltado suave por fila (NUEVO) */
+tr.is-expiring td { background: rgba(70, 140, 50, 0.06) !important; }
+tr.is-expired  td { background: rgba(200, 60, 60, 0.06) !important; }
+
+/* Paginación (NUEVO) */
+.pagination .page-link{
+  background:var(--surface);
+  border-color:var(--border);
+  color:var(--text);
+}
+.pagination .page-item.active .page-link{
+  background:linear-gradient(135deg, var(--brand) 0%, #8AAEFF 100%);
+  color:#0B0F1A;
+  border-color:transparent;
+}
+/* Estado manual: Caída */
+.badge-down{
+  background: rgba(255,145,0,.15);
+  color: #ffb26b;
+  border: 1px solid rgba(255,145,0,.35);
+}
+tr.is-down td{
+  background: rgba(255,145,0,.06) !important;
+}

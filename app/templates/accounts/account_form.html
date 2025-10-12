@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="section-title"><span class="dot"></span><h3 class="m-0">Editar cuenta</h3></div>
+<div class="card p-3">
+  <form method="post" action="{{ url_for('accounts.edit', id=account.id) }}">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Plataforma</label>
+        <input name="platform" class="form-control" value="{{ account.platform }}" required>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Correo</label>
+        <input name="username" class="form-control" value="{{ account.username }}" required>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Contraseña</label>
+        <input name="password" class="form-control" value="{{ account.password or '' }}">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Proveedor</label>
+        <select name="provider_id" class="form-select">
+          <option value="">-- ninguno --</option>
+          {% for p in providers %}
+            <option value="{{ p.id }}" {% if account.provider_id==p.id %}selected{% endif %}>{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label">Cliente</label>
+        <select name="client_id" class="form-select">
+          <option value="">-- ninguno --</option>
+          {% for c in clients %}
+            <option value="{{ c.id }}" {% if account.client_id==c.id %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label">Inicio</label>
+        <input type="date" name="start_date" class="form-control" value="{{ account.start_date or '' }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Fin</label>
+        <input type="date" name="end_date" class="form-control" value="{{ account.end_date or '' }}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Tiempo (min)</label>
+        <input type="number" name="time_allocated" class="form-control" value="{{ account.time_allocated or '' }}">
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Notas</label>
+        <textarea name="notes" class="form-control" rows="3">{{ account.notes or '' }}</textarea>
+      </div>
+
+      <!-- ✅ Dentro del form: Estado manual -->
+      <div class="col-12">
+        <label class="form-label">Estado manual (opcional)</label>
+        <select name="status_manual" class="form-select">
+          <option value="" {{ (account.status_manual or '')=='' and 'selected' or '' }}>Automático (por fechas)</option>
+          <option value="CAIDA" {{ account.status_manual=='CAIDA' and 'selected' or '' }}>Caída</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{{ url_for('accounts.index') }}">Volver</a>
+      <button class="btn btn-primary">Guardar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

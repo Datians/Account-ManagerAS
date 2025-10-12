@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="section-title">
+  <span class="dot"></span><h3 class="m-0">Cuentas</h3>
+</div>
+
+<div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+  <a class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">Nueva cuenta</a>
+  <a class="btn btn-outline-secondary" href="{{ url_for('accounts.download_template') }}">Descargar plantilla Excel</a>
+
+  <form action="{{ url_for('accounts.upload_excel') }}" method="post" enctype="multipart/form-data" class="d-inline-flex align-items-center gap-2 ms-2">
+    <input type="file" name="file" accept=".xlsx" required>
+    <button class="btn btn-primary btn-sm">Subir Excel</button>
+  </form>
+
+  <!-- Buscador libre + selector de plataforma + estado + export -->
+  <form class="d-flex flex-wrap gap-2 ms-auto" method="get" action="{{ url_for('accounts.index') }}">
+    <input class="form-control" type="search" name="q" value="{{ q or '' }}"
+           placeholder="Buscar (plataforma, correo, cliente, proveedor)" style="max-width:320px">
+
+    <select class="form-select" name="platform" style="max-width:220px">
+      <option value="">Todas las plataformas</option>
+      {% for p in platform_options %}
+        <option value="{{ p }}" {{ 'selected' if p == platform_selected else '' }}>{{ p }}</option>
+      {% endfor %}
+    </select>
+
+    <select class="form-select" name="status" title="Estado" style="max-width:200px">
+      <option value="all"      {% if status=='all' %}selected{% endif %}>Todos</option>
+      <option value="active"   {% if status=='active' %}selected{% endif %}>Activas</option>
+      <option value="expiring" {% if status=='expiring' %}selected{% endif %}>Por vencer (≤7d)</option>
+      <option value="expired"  {% if status=='expired' %}selected{% endif %}>Vencidas</option>
+      <option value="nodate"   {% if status=='nodate' %}selected{% endif %}>Sin fecha</option>
+      <option value="down"     {% if status=='down' %}selected{% endif %}>Caídas</option>
+    </select>
+
+    <button class="btn btn-outline-secondary">Filtrar</button>
+    <a class="btn btn-outline-secondary"
+       href="{{ url_for('accounts.export_accounts', q=q, status=status, platform=platform_selected) }}">Exportar</a>
+  </form>
+</div>
+
+<div class="card p-2">
+  <!-- Toolbar de acciones masivas -->
+  <form id="bulkForm" method="post" action="{{ url_for('accounts.bulk_action') }}" onsubmit="return confirm('¿Eliminar las cuentas seleccionadas? Esta acción no se puede deshacer.')">
+    <!-- Conservamos filtros/estado/página al enviar -->
+    <input type="hidden" name="q" value="{{ q or '' }}">
+    <input type="hidden" name="status" value="{{ status or 'all' }}">
+    <input type="hidden" name="platform" value="{{ platform_selected or '' }}">
+    <input type="hidden" name="page" value="{{ pagination.page }}">
+    <input type="hidden" name="action" value="delete">
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <div class="d-flex gap-2 align-items-center">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="selectAll">
+          <label class="form-check-label" for="selectAll">Seleccionar todo</label>
+        </div>
+        <span class="text-muted small" id="selCount">0 seleccionadas</span>
+      </div>
+      <button id="bulkDeleteBtn" class="btn btn-danger btn-sm" disabled>Eliminar seleccionadas</button>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle table-hover mb-0">
+        <thead>
+          <tr>
+            <th style="width:36px;"></th>
+            <th>Plataforma</th>
+            <th>Correo</th>
+            <th>Contraseña</th>
+            <th>Cliente</th>
+            <th>Proveedor</th>
+            <th>Vence</th>
+            <th>Estado</th>
+            <th>Días</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in accounts %}
+          <tr
+            {% if a.status_manual == 'CAIDA' %}
+              class="is-down"
+            {% elif a.end_date %}
+              {% if a.end_date < today %} class="is-expired"
+              {% elif a.end_date <= soon_limit %} class="is-expiring"
+              {% endif %}
+            {% endif %}
+          >
+            <td>
+              <input class="row-check form-check-input" type="checkbox" name="selected" value="{{ a.id }}">
+            </td>
+            <td>{{ a.platform }}</td>
+            <td>{{ a.username }}</td>
+            <td>
+              {% if a.password %}
+                <span class="badge-soft" style="padding:.35rem .6rem; font-family:monospace;">{{ a.password }}</span>
+              {% else %} — {% endif %}
+            </td>
+            <td>{{ a.client.name if a.client else '' }}</td>
+            <td>{{ a.provider.name if a.provider else '' }}</td>
+            <td>{{ a.end_date }}</td>
+
+            <td>
+              {% if a.status_manual == 'CAIDA' %}
+                <span class="badge-soft badge-down">Caída</span>
+              {% elif not a.end_date %}
+                <span class="badge-soft">Sin fecha</span>
+              {% elif a.end_date < today %}
+                <span class="badge-soft badge-expired">Vencida</span>
+              {% elif a.end_date <= soon_limit %}
+                <span class="badge-soft badge-expiring">Por vencer</span>
+              {% else %}
+                <span class="badge-soft badge-active">Activa</span>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if a.status_manual == 'CAIDA' %}
+                —
+              {% elif not a.end_date %}
+                —
+              {% else %}
+                {% set delta = (a.end_date - today).days %}
+                {% if delta >= 0 %} {{ delta }} {% else %} hace {{ (-delta) }} {% endif %}
+              {% endif %}
+            </td>
+
+            <td class="text-end">
+              <a class="btn btn-sm btn-primary" href="{{ url_for('accounts.edit', id=a.id) }}">Editar</a>
+              <form action="{{ url_for('accounts.delete', id=a.id) }}" method="post" class="d-inline" onsubmit="return confirm('Eliminar cuenta?')">
+                <button class="btn btn-sm btn-danger">Eliminar</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  <!-- Paginación -->
+  <nav class="mt-3">
+    <ul class="pagination pagination-sm">
+      {% if pagination.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('accounts.index', page=1, q=q, status=status, platform=platform_selected) }}">&laquo;</a></li>
+        <li class="page-item"><a class="page-link" href="{{ url_for('accounts.index', page=pagination.prev_num, q=q, status=status, platform=platform_selected) }}">Anterior</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+        <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+      {% endif %}
+
+      <li class="page-item disabled"><span class="page-link">Página {{ pagination.page }} / {{ pagination.pages or 1 }}</span></li>
+
+      {% if pagination.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('accounts.index', page=pagination.next_num, q=q, status=status, platform=platform_selected) }}">Siguiente</a></li>
+        <li class="page-item"><a class="page-link" href="{{ url_for('accounts.index', page=pagination.pages, q=q, status=status, platform=platform_selected) }}">&raquo;</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
+<!-- Modal crear cuenta -->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('accounts.index') }}">
+        <input type="hidden" name="action" value="create">
+        <div class="modal-header"><h5 class="modal-title">Nueva cuenta</h5></div>
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label">Plataforma</label><input name="platform" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">Correo</label><input name="username" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">Contraseña</label><input name="password" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Proveedor</label>
+            <select name="provider_id" class="form-select">
+              <option value="">-- ninguno --</option>
+              {% for p in providers %}<option value="{{p.id}}">{{p.name}}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Cliente</label>
+            <select name="client_id" class="form-select">
+              <option value="">-- ninguno --</option>
+              {% for c in clients %}<option value="{{c.id}}">{{c.name}}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><label class="form-label">Fecha inicio</label><input type="date" name="start_date" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Fecha fin</label><input type="date" name="end_date" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Tiempo (min)</label><input type="number" name="time_allocated" class="form-control"></div>
+          <div class="mb-2"><label class="form-label">Notas</label><textarea name="notes" class="form-control" rows="3"></textarea></div>
+
+          <!-- Estado manual -->
+          <div class="mb-2">
+            <label class="form-label">Estado manual (opcional)</label>
+            <select name="status_manual" class="form-select">
+              <option value="">Automático (por fechas)</option>
+              <option value="CAIDA">Caída</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button class="btn btn-primary">Crear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JS mínimo para seleccionar todo y habilitar botón -->
+<script>
+  (function() {
+    const selectAll = document.getElementById('selectAll');
+    const checks = () => Array.from(document.querySelectorAll('.row-check'));
+    const btn = document.getElementById('bulkDeleteBtn');
+    const selCount = document.getElementById('selCount');
+
+    function refresh() {
+      const list = checks();
+      const n = list.filter(c => c.checked).length;
+      btn.disabled = n === 0;
+      selCount.textContent = n + ' seleccionadas';
+      // Si todos están marcados, marca el master; si no, quítalo
+      selectAll.checked = (n > 0 && n === list.length);
+      selectAll.indeterminate = (n > 0 && n < list.length);
+    }
+
+    if (selectAll) {
+      selectAll.addEventListener('change', () => {
+        checks().forEach(c => c.checked = selectAll.checked);
+        refresh();
+      });
+    }
+
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('row-check')) refresh();
+    });
+
+    refresh();
+  })();
+</script>
+{% endblock %}
