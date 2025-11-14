@@ -20,7 +20,7 @@ primary_region = "iad"
   RUN_SCHEDULER = "1"
 
 [[mounts]]
-  source = 'data'
+  source = "data_restore"
   destination = '/data'
 
 [http_service]
