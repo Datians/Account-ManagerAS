@@ -54,4 +54,5 @@ primary_region = "iad"
   cpus = 1
   
 [deploy]
-  release_command = "flask db upgrade -d migrations"
+  release_command = "echo 'Skipping migrations on deploy (DB restored from snapshot)'"
+
