@@ -49,9 +49,9 @@ primary_region = "iad"
     timeout = '2s'
 
 [[vm]]
-  memory = '1gb'
-  cpu_kind = 'shared'
+  memory = "256mb"
   cpus = 1
+  cpu-kind = "shared"
   
 [deploy]
   release_command = "echo 'Skipping migrations on deploy (DB restored from snapshot)'"
